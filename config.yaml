@@ -1,0 +1,267 @@
+# RAG Evaluation System Configuration
+# GenAI Fellowship Assignment
+
+# Data sources and storage
+data:
+  pdf_directory: "data/pdfs"
+  processed_directory: "data/processed"
+  embeddings_directory: "data/embeddings"
+  results_directory: "data/results"
+  minimum_pages: 200
+
+# PDF Processing Configuration
+processing:
+  # Text extraction
+  text_extraction:
+    preserve_layout: true
+    extract_images: true
+    ocr_enabled: true
+    ocr_language: "eng"
+  
+  # Table extraction
+  table_extraction:
+    method: "camelot"  # camelot or pdfplumber
+    table_areas: null  # Auto-detect if null
+    edge_tolerance: 50
+  
+  # Image processing
+  image_processing:
+    extract_images: true
+    ocr_images: true
+    image_description: true  # Generate descriptions
+    min_image_size: [100, 100]  # [width, height]
+
+# Semantic Chunking Configuration
+chunking:
+  method: "semantic"  # semantic, recursive, or sentence
+  chunk_size: 1000
+  chunk_overlap: 200
+  separators: ["\n\n", "\n", " ", ""]
+  
+  # Semantic chunking specific
+  sentence_splitter: "spacy"
+  similarity_threshold: 0.5
+  min_chunk_size: 100
+  max_chunk_size: 2000
+  
+  # Content type handling
+  preserve_tables: true
+  table_chunk_strategy: "separate"  # separate, integrate, or describe
+  image_chunk_strategy: "describe"  # describe, caption, or skip
+
+# Embedding Configuration
+embeddings:
+  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  batch_size: 32
+  normalize_embeddings: true
+  cache_embeddings: true
+
+# Vector Store Configurations
+vector_stores:
+  # FAISS (Local - No setup required)
+  faiss:
+    storage_path: "data/embeddings/faiss_index"
+    vector_dimension: 384
+    
+    indexes:
+      flat:
+        index_type: "IndexFlatIP"  # Inner Product (cosine)
+      hnsw:
+        index_type: "IndexHNSWFlat"
+        params:
+          M: 16
+          efConstruction: 200
+      ivf:
+        index_type: "IndexIVFFlat"
+        params:
+          nlist: 100
+
+  # ChromaDB (Local - Simple setup)
+  chromadb:
+    storage_path: "data/embeddings/chroma_db"
+    collection_name: "document_chunks"
+    
+    indexes:
+      flat:
+        type: "flat"
+      hnsw:
+        type: "hnsw"
+        space: "cosine"
+        params:
+          M: 16
+          efConstruction: 200
+      ivf:
+        type: "ivf"
+        nlist: 100
+
+  # MongoDB Atlas (Free tier available)
+  mongodb:
+    connection_string: "${MONGODB_URI}"
+    database_name: "rag_evaluation"
+    collection_name: "document_chunks"
+    vector_field: "embedding"
+    text_field: "content"
+    metadata_field: "metadata"
+    
+    # Index configurations
+    indexes:
+      flat:
+        type: "vectorSearch"
+        similarity: "cosine"
+      hnsw:
+        type: "vectorSearch"
+        similarity: "cosine"
+        numLists: 100
+      ivf:
+        type: "vectorSearch"
+        similarity: "cosine"
+        numLists: 100
+
+  # Qdrant (Local Docker)
+  qdrant:
+    host: "localhost"
+    port: 6333
+    collection_name: "document_chunks"
+    vector_size: 384
+    
+    indexes:
+      flat:
+        type: "flat"
+      hnsw:
+        type: "hnsw"
+        m: 16
+        ef_construct: 200
+      ivf:
+        type: "ivf"
+        nlist: 100
+
+# Evaluation and Benchmarking
+evaluation:
+  # Test queries for consistent evaluation
+  test_queries:
+    - "What are the main financial risks mentioned in the documents?"
+    - "Describe the regulatory compliance requirements."
+    - "What are the key performance metrics discussed?"
+    - "Summarize the market analysis findings."
+    - "What recommendations are provided for risk mitigation?"
+    - "Explain the financial projections for the next quarter."
+    - "What are the compliance audit findings?"
+    - "Describe the operational challenges identified."
+    - "What strategic initiatives are proposed?"
+    - "Summarize the competitive landscape analysis."
+  
+  # Benchmark parameters
+  benchmark:
+    num_runs: 5  # Number of runs for timing average
+    top_k: 10   # Number of results to retrieve
+    timeout: 30  # Timeout in seconds
+    
+  # Accuracy evaluation
+  accuracy:
+    similarity_threshold: 0.7
+    relevance_metrics: ["precision", "recall", "f1", "ndcg"]
+    
+  # Performance metrics
+  performance:
+    measure_latency: true
+    measure_throughput: true
+    measure_memory: true
+    measure_cpu: false
+
+# Reranking Configuration
+reranking:
+  methods:
+    bm25:
+      k1: 1.2
+      b: 0.75
+      top_k: 50  # Retrieve more for reranking
+      final_k: 10  # Final results after reranking
+    
+    mmr:
+      lambda_param: 0.5  # Balance between relevance and diversity
+      top_k: 50
+      final_k: 10
+  
+  # Evaluation
+  compare_methods: true
+  baseline_similarity_only: true
+
+# LLM Integration
+llm:
+  providers:
+    anthropic:
+      model: "claude-3-sonnet-20240229"
+      api_key: "${ANTHROPIC_API_KEY}"
+      temperature: 0.1
+      max_tokens: 2000
+    
+    groq:
+      model: "mixtral-8x7b-32768"
+      api_key: "${GROQ_API_KEY}"
+      temperature: 0.1
+      max_tokens: 2000
+  
+  # Default provider (you have this key)
+  default_provider: "anthropic"
+  
+  # Prompt templates
+  prompt_templates:
+    default: |
+      You are a helpful AI assistant that answers questions based on the provided context.
+      
+      Context:
+      {context}
+      
+      Question: {question}
+      
+      Please provide a comprehensive answer based on the context provided. If the context doesn't contain enough information to answer the question, please state that clearly.
+      
+      Answer:
+    
+    financial: |
+      You are a financial analysis expert. Based on the provided financial documents, answer the following question with precision and include relevant metrics or data points when available.
+      
+      Context:
+      {context}
+      
+      Question: {question}
+      
+      Financial Analysis:
+
+# Reporting Configuration
+reporting:
+  output_directory: "data/results"
+  docx_template: null  # Use default template if null
+  
+  # Report sections
+  sections:
+    executive_summary: true
+    methodology: true
+    data_processing_results: true
+    performance_benchmarks: true
+    reranking_analysis: true
+    recommendations: true
+    appendices: true
+  
+  # Charts and visualizations
+  visualizations:
+    performance_charts: true
+    accuracy_plots: true
+    comparison_tables: true
+    distribution_plots: true
+  
+  # Formatting
+  formatting:
+    font_family: "Calibri"
+    font_size: 11
+    heading_font_size: 14
+    include_toc: true
+    include_page_numbers: true
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "rag_evaluation.log"
+  max_size: "10MB"
+  backup_count: 5

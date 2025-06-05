@@ -1,0 +1,4 @@
+This is a test document for incremental processing. 
+It contains some sample text to test the chunking and embedding process.
+The incremental system should detect this as a new document and process it accordingly.
+This tests the document lifecycle management capabilities of the RAG system.

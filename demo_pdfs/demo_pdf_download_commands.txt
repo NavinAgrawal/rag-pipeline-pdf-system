@@ -1,0 +1,194 @@
+# ============================================================================
+# PDF DOWNLOAD COMMANDS AND DEMO QUERIES FOR RAG SYSTEM
+# ============================================================================
+
+# Create downloads directory
+mkdir -p demo_pdfs
+cd demo_pdfs
+
+# ============================================================================
+# 1. TECHNOLOGY RESEARCH PAPERS
+# ============================================================================
+
+# LLaMA Paper (Meta AI Research)
+curl -L "https://arxiv.org/pdf/2302.13971.pdf" -o "llama_paper.pdf"
+# Queries:
+# - "What are the key innovations in the LLaMA model architecture?"
+# - "Compare LLaMA performance metrics with other language models"
+# - "What training techniques were used for LLaMA?"
+
+# ChatGPT Technical Report
+curl -L "https://arxiv.org/pdf/2303.08774.pdf" -o "chatgpt_technical_report.pdf"
+# Queries:
+# - "What safety measures are implemented in ChatGPT?"
+# - "How does ChatGPT handle harmful content generation?"
+# - "What are the limitations of ChatGPT mentioned in the report?"
+
+# Retrieval-Augmented Generation (RAG) Paper
+curl -L "https://arxiv.org/pdf/2005.11401.pdf" -o "rag_original_paper.pdf"
+# Queries:
+# - "How does RAG improve knowledge-intensive tasks?"
+# - "What are the architectural components of RAG?"
+# - "Compare RAG performance with baseline models"
+
+# ============================================================================
+# 2. FINANCIAL DOCUMENTS
+# ============================================================================
+
+# World Bank Annual Report
+curl -L "https://openknowledge.worldbank.org/server/api/core/bitstreams/1c44365d-15b7-54a6-a369-2e9e0b63d9e3/content" -o "world_bank_annual_report.pdf"
+# Queries:
+# - "What are the World Bank's key development priorities?"
+# - "Which regions received the most World Bank funding?"
+# - "What are the main challenges in global development?"
+
+# IMF Global Financial Stability Report
+curl -L "https://www.imf.org/-/media/Files/Publications/GFSR/2023/October/English/text.ashx" -o "imf_financial_stability.pdf"
+# Queries:
+# - "What are the current global financial stability risks?"
+# - "How do rising interest rates affect financial markets?"
+# - "What policy recommendations does the IMF provide?"
+
+# ============================================================================
+# 3. HEALTHCARE AND MEDICAL
+# ============================================================================
+
+# WHO Global Health Report
+curl -L "https://apps.who.int/iris/rest/bitstreams/1417465/retrieve" -o "who_global_health_report.pdf"
+# Queries:
+# - "What are the leading causes of global mortality?"
+# - "How has COVID-19 impacted global health systems?"
+# - "What are WHO's health targets for 2030?"
+
+# Medical AI Research Paper
+curl -L "https://arxiv.org/pdf/2109.07613.pdf" -o "medical_ai_diagnosis.pdf"
+# Queries:
+# - "How effective is AI in medical diagnosis?"
+# - "What are the ethical considerations for AI in healthcare?"
+# - "Which medical specialties benefit most from AI?"
+
+# ============================================================================
+# 4. SUSTAINABILITY AND CLIMATE
+# ============================================================================
+
+# IPCC Climate Change Report (Summary)
+curl -L "https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_SPM.pdf" -o "ipcc_climate_report.pdf"
+# Queries:
+# - "What are the projected temperature increases by 2050?"
+# - "Which regions are most vulnerable to climate change?"
+# - "What mitigation strategies does the IPCC recommend?"
+
+# UN Sustainable Development Goals Report
+curl -L "https://unstats.un.org/sdgs/report/2023/The-Sustainable-Development-Goals-Report-2023.pdf" -o "un_sdg_report.pdf"
+# Queries:
+# - "Which SDG goals are on track for 2030?"
+# - "What are the main barriers to achieving SDGs?"
+# - "How has progress on SDGs been affected by recent crises?"
+
+# ============================================================================
+# 5. LEGAL AND REGULATORY
+# ============================================================================
+
+# EU AI Act Documentation
+curl -L "https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=CELEX:52021PC0206&from=EN" -o "eu_ai_act.pdf"
+# Queries:
+# - "What are the risk categories defined in the EU AI Act?"
+# - "Which AI systems are prohibited under the EU AI Act?"
+# - "What compliance requirements exist for high-risk AI systems?"
+
+# SEC Cybersecurity Disclosure Rules
+curl -L "https://www.sec.gov/files/rules/final/2023/33-11216.pdf" -o "sec_cybersecurity_rules.pdf"
+# Queries:
+# - "What cybersecurity incidents must be disclosed to the SEC?"
+# - "What are the timeline requirements for cybersecurity reporting?"
+# - "How do these rules affect public companies?"
+
+# ============================================================================
+# 6. BUSINESS AND STRATEGY
+# ============================================================================
+
+# McKinsey Global Institute Report on AI
+curl -L "https://www.mckinsey.com/~/media/mckinsey/business%20functions/mckinsey%20digital/our%20insights/the%20age%20of%20ai/mgi-the-age-of-artificial-intelligence.pdf" -o "mckinsey_ai_report.pdf"
+# Queries:
+# - "What is the economic impact of AI across industries?"
+# - "Which sectors will be most transformed by AI?"
+# - "What skills will be most valuable in the AI economy?"
+
+# Deloitte Tech Trends Report
+curl -L "https://www2.deloitte.com/content/dam/Deloitte/us/Documents/technology/us-tech-trends-2023.pdf" -o "deloitte_tech_trends.pdf"
+# Queries:
+# - "What are the top technology trends for enterprise adoption?"
+# - "How are companies implementing cloud-first strategies?"
+# - "What are the key considerations for digital transformation?"
+
+# ============================================================================
+# 7. GOVERNMENT AND POLICY
+# ============================================================================
+
+# US National AI Initiative
+curl -L "https://www.whitehouse.gov/wp-content/uploads/2023/07/NAIRR-TF-Final-Report-2023.pdf" -o "us_national_ai_initiative.pdf"
+# Queries:
+# - "What are the US government's AI research priorities?"
+# - "How much funding is allocated to AI research initiatives?"
+# - "What are the national security implications of AI development?"
+
+# NIST AI Risk Management Framework
+curl -L "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf" -o "nist_ai_risk_framework.pdf"
+# Queries:
+# - "What are the core principles of NIST's AI risk management?"
+# - "How should organizations assess AI system risks?"
+# - "What governance structures does NIST recommend for AI?"
+
+# ============================================================================
+# DEMO SCRIPT FOR PRESENTATIONS
+# ============================================================================
+
+echo "
+DEMO FLOW SUGGESTIONS:
+
+1. CROSS-DOMAIN INTELLIGENCE
+   Query: 'Compare AI governance approaches between EU AI Act and NIST framework'
+   Shows: Cross-document analysis across regulatory domains
+
+2. TECHNICAL DEPTH
+   Query: 'What are the key architectural differences between LLaMA and ChatGPT?'
+   Shows: Technical parameter extraction from research papers
+
+3. FINANCIAL ANALYSIS
+   Query: 'What are the systemic risks identified across IMF and World Bank reports?'
+   Shows: Financial intelligence across multiple institutions
+
+4. TREND ANALYSIS
+   Query: 'What technology trends are consistent across McKinsey and Deloitte reports?'
+   Shows: Business intelligence synthesis
+
+5. REGULATORY COMPLIANCE
+   Query: 'What cybersecurity disclosure requirements affect AI companies?'
+   Shows: Legal/compliance analysis
+
+6. IMPACT ASSESSMENT
+   Query: 'How do climate risks affect global financial stability?'
+   Shows: Cross-domain risk analysis (climate + finance)
+
+PRESENTATION TALKING POINTS:
+- 'We now have 12+ documents across 7 different domains'
+- 'The system can analyze technical papers, regulatory documents, and business reports'
+- 'Watch how it extracts structured insights from unstructured text'
+- 'See cross-document intelligence that no single source could provide'
+"
+
+# ============================================================================
+# QUICK VERIFICATION
+# ============================================================================
+
+echo "
+DOWNLOADED FILES:"
+ls -la *.pdf
+
+echo "
+TOTAL SIZE:"
+du -sh .
+
+echo "
+FILE COUNT:"
+ls *.pdf | wc -l

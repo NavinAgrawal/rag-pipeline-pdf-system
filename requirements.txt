@@ -1,0 +1,51 @@
+# PDF Processing with multimodal support
+PyPDF2>=3.0.1
+pymupdf>=1.26.0
+pdfplumber>=0.11.6
+pytesseract>=0.3.13
+pillow>=11.0.0
+camelot-py[cv]>=0.11.0
+
+# Semantic chunking
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-text-splitters>=0.0.1
+spacy>=3.7.0
+
+# Vector Databases (local/free options)
+faiss-cpu>=1.11.0
+chromadb>=0.4.0
+pymongo>=4.6.0  # MongoDB (free tier)
+qdrant-client>=1.6.0  # Can run locally
+
+# Embeddings and ML
+sentence-transformers>=4.1.0
+torch>=2.7.0
+
+# Reranking
+rank-bm25>=0.2.2
+
+# LLM integration (using your existing keys)
+anthropic>=0.18.0
+groq>=0.4.0
+
+# Performance and evaluation
+scikit-learn>=1.6.0
+numpy>=2.2.0
+pandas>=2.2.0
+
+# Output generation
+python-docx>=1.1.0
+
+# Web framework
+fastapi>=0.115.0
+streamlit>=1.45.0
+uvicorn>=0.34.0
+
+# Utilities
+python-dotenv>=1.1.0
+pyyaml>=6.0
+tqdm>=4.67.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+watchdog>=3.0.0
