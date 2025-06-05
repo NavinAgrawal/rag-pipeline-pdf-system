@@ -9,6 +9,8 @@ import tempfile
 import warnings
 import sys
 from datetime import datetime
+import json
+from pathlib import Path
 
 # Suppress PyTorch/Streamlit compatibility warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -66,6 +68,37 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
+
+def update_visitor_count():
+    """Simple visitor counter using local file"""
+    counter_file = Path("data/visitor_count.json")
+    
+    # Initialize counter if doesn't exist
+    if not counter_file.exists():
+        counter_data = {"visits": 0, "unique_sessions": 0}
+    else:
+        try:
+            with open(counter_file, 'r') as f:
+                counter_data = json.load(f)
+        except:
+            counter_data = {"visits": 0, "unique_sessions": 0}
+    
+    # Check if new session
+    if 'visitor_counted' not in st.session_state:
+        counter_data["unique_sessions"] += 1
+        st.session_state.visitor_counted = True
+    
+    # Always increment page visits
+    counter_data["visits"] += 1
+    
+    # Save counter
+    try:
+        with open(counter_file, 'w') as f:
+            json.dump(counter_data, f)
+    except:
+        pass  # Fail silently if can't write
+    
+    return counter_data
 
 def initialize_session_state():
     """Initialize session state variables"""
@@ -830,7 +863,10 @@ def show_query_interface():
 def main():
     # Initialize session state
     initialize_session_state()
-    
+
+    # Maintain visitor count
+    visitor_data = update_visitor_count()
+
     # Main header with system info
     st.markdown('<h1 class="main-header">🚀 RAG Pipeline PDF System</h1>', unsafe_allow_html=True)
     st.markdown("**GenAI Fellowship Project - Advanced Document Retrieval & Analysis**")
@@ -1087,7 +1123,10 @@ def main():
                 
         else:
             st.markdown('<div class="warning-box">⚠️ Upload documents to begin</div>', unsafe_allow_html=True)
-        
+
+        st.markdown("---")
+        st.caption(f"👁️ Views: {visitor_data['visits']} | Sessions: {visitor_data['unique_sessions']}")
+
         st.markdown("---")
         
         # Add button to show upload section
