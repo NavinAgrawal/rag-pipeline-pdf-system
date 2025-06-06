@@ -1,25 +1,88 @@
-import streamlit as st
 import os
-import json
-import time
-from pathlib import Path
-import pandas as pd
-from datetime import datetime
-import tempfile
-import warnings
 import sys
-from datetime import datetime
-import json
-from pathlib import Path
-
-# Suppress PyTorch/Streamlit compatibility warnings
-warnings.filterwarnings("ignore", category=RuntimeWarning)
-warnings.filterwarnings("ignore", message=".*torch.classes.*")
-
-# Suppress asyncio warnings
+import warnings
+import logging
 import asyncio
-if hasattr(asyncio, '_set_running_loop'):
-    asyncio._set_running_loop(None)
+import time
+import json
+import tempfile
+from pathlib import Path
+from datetime import datetime
+import pandas as pd
+
+# ENHANCED: Suppress ALL warnings at system level
+warnings.filterwarnings("ignore")
+warnings.simplefilter("ignore")
+
+# Suppress specific PyTorch/Streamlit compatibility warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", message=".*torch.classes.*")
+warnings.filterwarnings("ignore", message=".*torch._C._get_custom_class_python_wrapper.*")
+warnings.filterwarnings("ignore", message=".*no running event loop.*")
+warnings.filterwarnings("ignore", message=".*Examining the path of torch.classes.*")
+warnings.filterwarnings("ignore", message=".*__path__._path.*")
+
+# Disable logging for problematic modules
+logging.getLogger("torch").setLevel(logging.CRITICAL)
+logging.getLogger("transformers").setLevel(logging.CRITICAL)
+logging.getLogger("streamlit").setLevel(logging.CRITICAL)
+logging.getLogger("asyncio").setLevel(logging.CRITICAL)
+
+# Set environment variables for maximum suppression
+os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+os.environ['PYTORCH_WARNINGS'] = 'ignore'
+os.environ['PYTHONWARNINGS'] = 'ignore'
+
+# Handle asyncio compatibility more aggressively
+try:
+    import asyncio
+    # Try to suppress asyncio warnings
+    if hasattr(asyncio, 'set_event_loop_policy'):
+        asyncio.set_event_loop_policy(None)
+    loop = asyncio.get_running_loop()
+except RuntimeError:
+    # Create a dummy loop to prevent warnings
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    except:
+        pass
+except:
+    pass
+
+# Import torch with maximum suppression
+try:
+    import torch
+    # Disable all torch warnings
+    if hasattr(torch, '_C'):
+        try:
+            torch._C._set_print_stacktraces_on_fatal_signal(False)
+        except:
+            pass
+    
+    # Patch torch.classes to prevent path inspection
+    if hasattr(torch, 'classes'):
+        try:
+            # Monkey patch the problematic method
+            original_getattr = torch.classes.__class__.__getattribute__
+            def safe_getattr(self, name):
+                if name == '__path__':
+                    return None
+                try:
+                    return original_getattr(self, name)
+                except:
+                    return None
+            torch.classes.__class__.__getattribute__ = safe_getattr
+        except:
+            pass
+except ImportError:
+    pass
+
+# Import streamlit AFTER all suppression is in place
+import streamlit as st
 
 # Page config
 st.set_page_config(
@@ -29,7 +92,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Custom CSS (same as before)
 st.markdown("""
 <style>
 .main-header {
@@ -264,22 +327,32 @@ def generate_docx_report(search_results, performance_metrics, chunk_stats):
         return None, None
 
 def perform_real_vector_search(query, top_k=5):
-    """Perform actual search using your vector databases"""
+    """Perform actual search using your vector databases - FIXED VERSION with Lazy Loading"""
     try:
         import sys
         sys.path.append('src')
         import json
         import numpy as np
-        from sentence_transformers import SentenceTransformer
-        from sklearn.metrics.pairwise import cosine_similarity
+        
+        # Lazy import with warning suppression
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            from sentence_transformers import SentenceTransformer
+            from sklearn.metrics.pairwise import cosine_similarity
         
         # Load the real chunks with embeddings
         with open('data/processed/semantic_chunks.json', 'r') as f:
             data = json.load(f)
             chunks = data.get('chunks', data) if isinstance(data, dict) else data
         
-        # Generate query embedding
-        model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        # Lazy model loading with caching
+        @st.cache_resource
+        def load_embedding_model():
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                return SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        
+        model = load_embedding_model()
         query_embedding = model.encode([query]).reshape(1, -1)
         
         # Calculate similarities with all chunks
@@ -303,65 +376,69 @@ def perform_real_vector_search(query, top_k=5):
         # Sort by similarity
         similarities.sort(key=lambda x: x['similarity'], reverse=True)
         
-        # Apply smarter relevance filtering using configurable threshold
-        relevance_threshold = st.session_state.get('relevance_threshold', 0.6)
+        # SIMPLIFIED FILTERING - Remove aggressive domain blocking
+        relevance_threshold = st.session_state.get('relevance_threshold', 0.4)  # LOWERED from 0.6
         domain_awareness = st.session_state.get('domain_awareness', True)
         
-        # Additional domain mismatch detection
-        query_lower = query.lower()
-        ai_ml_terms = ['llama', 'gpt', 'bert', 'transformer', 'neural', 'model', 'training', 'dataset', 'bleu', 'attention', 'machine learning', 'deep learning']
-        finance_terms = ['fed', 'federal', 'monetary', 'banking', 'financial', 'regulatory', 'compliance', 'risk', 'capital', 'reserve']
-        
-        is_ai_query = any(term in query_lower for term in ai_ml_terms)
-        
+        # Basic similarity filtering only
         relevant_results = []
         for result in similarities:
             # Basic similarity threshold
             if result['similarity'] < relevance_threshold:
                 continue
                 
-            # Domain mismatch detection (only if enabled)
+            # SIMPLIFIED domain awareness - only block obvious mismatches
             if domain_awareness:
+                query_lower = query.lower()
                 content_lower = result['full_content'].lower()
                 source_lower = result['source'].lower()
                 
-                # If it's an AI/ML query but content is clearly financial, be more strict
-                if is_ai_query:
-                    is_finance_content = any(term in content_lower or term in source_lower for term in finance_terms)
-                    has_ai_content = any(term in content_lower for term in ai_ml_terms)
-                    
-                    # If content is financial but has no AI terms, skip it even with high similarity
-                    if is_finance_content and not has_ai_content:
-                        continue
-                        
-                    # Require even higher threshold for cross-domain matches
-                    cross_domain_threshold = min(0.85, relevance_threshold + 0.15)  # At least 15% higher
-                    if result['similarity'] < cross_domain_threshold:
-                        continue
+                # Define very specific AI/ML vs Finance terms
+                ai_ml_terms = ['neural network', 'deep learning', 'machine learning', 'transformer', 'gpt', 'bert', 'bleu score', 'model training']
+                finance_terms = ['federal reserve', 'monetary policy', 'interest rate', 'banking regulation', 'financial stability']
+                
+                is_ai_query = any(term in query_lower for term in ai_ml_terms)
+                is_finance_query = any(term in query_lower for term in finance_terms)
+                
+                is_ai_content = any(term in content_lower for term in ai_ml_terms)
+                is_finance_content = any(term in content_lower for term in finance_terms)
+                
+                # Only block if it's a VERY clear mismatch with high confidence
+                if is_ai_query and is_finance_content and not is_ai_content and result['similarity'] < 0.8:
+                    continue
+                if is_finance_query and is_ai_content and not is_finance_content and result['similarity'] < 0.8:
+                    continue
             
             relevant_results.append(result)
         
-        # If no results meet strict criteria, return empty
-        if not relevant_results:
-            st.info(f"🔍 No relevant content found for query: '{query}'")
-            st.info(f"📊 Searched {len(similarities)} chunks, none exceeded relevance threshold of {relevance_threshold:.1%}")
-            if similarities:
-                best_score = similarities[0]['similarity']
-                st.info(f"💡 Best match was only {best_score:.1%} relevant (threshold: {relevance_threshold:.1%})")
-                if domain_awareness and is_ai_query:
-                    st.info("🧠 Domain awareness blocked potential cross-domain matches")
-            return []
+        # If no results, lower threshold and try again
+        if not relevant_results and relevance_threshold > 0.3:
+            st.info(f"🔍 No results at {relevance_threshold:.1%} threshold, trying {0.3:.1%}...")
+            
+            relevant_results = []
+            for result in similarities:
+                if result['similarity'] >= 0.3:  # Much lower threshold
+                    relevant_results.append(result)
         
-        # Log relevance info
+        # Log results for debugging
         if relevant_results:
             best_score = relevant_results[0]['similarity']
-            filtered_count = len(similarities) - len(relevant_results)
-            st.info(f"🎯 Found {len(relevant_results)} relevant results (best: {best_score:.1%}, filtered: {filtered_count})")
+            total_checked = len(similarities)
+            filtered_count = total_checked - len(relevant_results)
+            st.info(f"🎯 Found {len(relevant_results)} relevant results from {total_checked} chunks")
+            st.info(f"📊 Best match: {best_score:.1%} | Filtered out: {filtered_count}")
+        else:
+            # Show debugging info
+            st.warning(f"🔍 No results found. Top 3 similarity scores:")
+            for i, result in enumerate(similarities[:3]):
+                st.warning(f"  {i+1}. {result['similarity']:.1%} - {result['source']} (threshold: {relevance_threshold:.1%})")
         
         return relevant_results[:top_k]
         
     except Exception as e:
-        st.error(f"Real search failed: {e}")
+        st.error(f"Search failed: {e}")
+        import traceback
+        st.error(f"Traceback: {traceback.format_exc()}")
         return []
 
 def track_search_results(query, results, database="Real Vector Search", response_time=0.0):
@@ -644,7 +721,8 @@ def show_query_interface():
             search_results = perform_real_vector_search(user_query, num_results)
 
             if search_results:
-                track_search_results(user_query, search_results, "Vector Search", (time.time() - query_start))
+                search_time = time.time() - query_start
+                track_search_results(user_query, search_results, "Vector Search", search_time)
 
             # Step 3: Format results
             query_status.text("📊 Processing and formatting results...")
