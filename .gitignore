@@ -4,3 +4,8 @@ __pycache__/
 .DS_Store
 venv-*/
 data/visitor_count.json
+archive/
+after_fix*.pdf
+JB email.pdf
+venv-rag/
+.env
